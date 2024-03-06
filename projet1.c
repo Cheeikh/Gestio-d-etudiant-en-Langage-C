@@ -4,12 +4,34 @@
 #include <unistd.h>    // Pour usleep()
 #include <sys/types.h> // Pour pid_t
 #include <sys/wait.h>  // Pour waitpid()
-
+#include <termios.h>
 #define MAX_LONGUEUR_NOM 50
 #define MAX_LONGUEUR_MDP 50
 #define MAX_LONGUEUR_STATUT 50
 #define MAX_UTILISATEURS 100
 
+// Fonction pour masquer le mot de passe lors de la saisie
+char *getpass(const char *prompt)
+{
+    struct termios old, new;
+    char *password = malloc(100); // Taille maximale du mot de passe
+
+    // Masquer l'entrée
+    tcgetattr(fileno(stdin), &old);
+    new = old;
+    new.c_lflag &= ~ECHO;
+    tcsetattr(fileno(stdin), TCSANOW, &new);
+
+    // Demander le mot de passe
+    printf("%s", prompt);
+    scanf("%s", password);
+
+    // Rétablir l'entrée
+    tcsetattr(fileno(stdin), TCSANOW, &old);
+    printf("\n");
+
+    return password;
+}
 typedef struct
 {
     char nom[MAX_LONGUEUR_NOM];
@@ -101,7 +123,8 @@ int main()
         printf("Nom d'utilisateur : ");
         scanf("%s", nom_utilisateur);
         printf("Mot de passe : ");
-        scanf("%s", mot_de_passe);
+        // Utilisation de getpass pour lire le mot de passe sans l'afficher
+        char *mot_de_passe = getpass("");
 
         indice_utilisateur = verifier_authentification(nom_utilisateur, mot_de_passe, utilisateurs, nombre_utilisateurs);
 
