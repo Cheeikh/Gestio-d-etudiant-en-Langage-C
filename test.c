@@ -1,109 +1,125 @@
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
-#include <stdbool.h>
+#include <termios.h>
+#include <unistd.h>
 
-#define MAX_LONGUEUR_NOM 50
-#define MAX_CLASSES 3
-#define MAX_ETUDIANTS_PAR_CLASSE 5
+#define MAX_PASSWORD_LENGTH 25
 
-typedef struct
-{
-    char prenom[MAX_LONGUEUR_NOM];
-    char nom[MAX_LONGUEUR_NOM];
-    int id;
-    bool est_present;
-} Etudiant;
-
-typedef struct
-{
-    char nom_classe[MAX_LONGUEUR_NOM];
-} Classe;
-
-int lire_classes(Classe classes[])
-{
-    // Simuler la lecture des classes depuis un fichier
-    strcpy(classes[0].nom_classe, "DevWeb");
-    strcpy(classes[1].nom_classe, "RefDig");
-    strcpy(classes[2].nom_classe, "DevData");
-    return MAX_CLASSES;
+// Cette fonction vérifie les informations de connexion
+// Elle retourne 1 si la connexion est valide et 0 sinon
+int checkConnection(const char *login, const char *password) {
+    // Implémentation factice pour les besoins de démonstration
+    // Vous devez remplacer ceci par votre propre mécanisme d'authentification
+    if (strcmp(login, "utilisateur") == 0 && strcmp(password, "motdepasse") == 0) {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
-int lire_etudiants_par_classe(char nom_classe[], Etudiant etudiants[])
-{
-    // Simuler la lecture des étudiants depuis un fichier
-    int nombre_etudiants = MAX_ETUDIANTS_PAR_CLASSE;
-    for (int i = 0; i < nombre_etudiants; i++)
-    {
-        sprintf(etudiants[i].prenom, "Prénom%d", i+1);
-        sprintf(etudiants[i].nom, "Nom%d", i+1);
-        etudiants[i].id = i + 1;
-        etudiants[i].est_present = false;
-    }
-    return nombre_etudiants;
-}
+int connecter() {
+    char login[15];
+    char pwd[MAX_PASSWORD_LENGTH];
 
-void marquer_presence_admin()
-{
-    printf("Veuillez choisir une classe :\n");
-    // Lire les classes disponibles
-    Classe classes[MAX_CLASSES];
-    int nombre_classes = lire_classes(classes);
-    for (int i = 0; i < nombre_classes; i++)
-    {
-        printf("%d. %s\n", i + 1, classes[i].nom_classe);
-    }
+    char reponse = 'n';
+    int result;
+    int isvalid;
+    do {
+        do {
+            isvalid = 0;
 
-    int choix_classe;
-    do
-    {
-        printf("Votre choix : ");
-        scanf("%d", &choix_classe);
-    } while (choix_classe < 1 || choix_classe > nombre_classes);
+            printf("Veuillez saisir votre login : ");
+            getchar(); // pour consommer le caractère '\n' dans le buffer d'entrée
+            fgets(login, sizeof(login), stdin);
 
-    char nom_classe[MAX_LONGUEUR_NOM];
-    strcpy(nom_classe, classes[choix_classe - 1].nom_classe);
-
-    printf("Classe choisie : %s\n", nom_classe);
-
-    // Lire les étudiants de la classe choisie
-    Etudiant etudiants[MAX_ETUDIANTS_PAR_CLASSE];
-    int nombre_etudiants = lire_etudiants_par_classe(nom_classe, etudiants);
-    printf("Liste des étudiants de la classe %s :\n", nom_classe);
-    printf("ID  Prénom Nom\n");
-    for (int i = 0; i < nombre_etudiants; i++)
-    {
-        printf("%d   %s %s\n", etudiants[i].id, etudiants[i].prenom, etudiants[i].nom);
-    }
-
-    // Marquer la présence
-    int id_etudiant;
-    do
-    {
-        printf("Veuillez entrer l'ID de l'étudiant pour marquer sa présence (0 pour quitter) : ");
-        scanf("%d", &id_etudiant);
-
-        if (id_etudiant == 0)
-            return; // Quitter la fonction si l'administrateur choisit de quitter
-
-        bool id_valide = false;
-        for (int i = 0; i < nombre_etudiants; i++)
-        {
-            if (etudiants[i].id == id_etudiant)
-            {
-                etudiants[i].est_present = true;
-                id_valide = true;
-                printf("Présence marquée pour l'étudiant ID %d (%s %s)\n", etudiants[i].id, etudiants[i].prenom, etudiants[i].nom);
-                break;
+            if (login[0] == '\n' || login[0] == '\0') {
+                puts("Login invalide");
+                isvalid = 1;
             }
+        } while (isvalid == 1);
+
+        saisieMotDePasse(pwd);
+
+        login[strcspn(login, "\n")] = '\0'; // Supprimer le caractère de nouvelle ligne
+        pwd[strcspn(pwd, "\n")] = '\0';     // Supprimer le caractère de nouvelle ligne
+
+        result = checkConnection(login, pwd);
+
+        if (result == 0) {
+            puts("Login ou mot de passe invalide");
+            printf("Voulez-vous réessayer de vous connecter ? (o/n) : ");
+            scanf(" %c", &reponse); // L'espace avant %c permet de consommer les espaces, les retours chariot, etc.
+        } else {
+            break;
         }
-        if (!id_valide)
-            printf("ID étudiant invalide. Veuillez réessayer.\n");
-    } while (1);
+    } while (reponse != 'n');
+
+    return result;
 }
 
-int main()
-{
-    marquer_presence_admin();
+void disableEcho() {
+    struct termios oldt, newt;
+
+    // Sauvegarder les paramètres du terminal
+    tcgetattr(STDIN_FILENO, &oldt);
+
+    // Copier les paramètres
+    newt = oldt;
+
+    // Désactiver l'écho dans les caractères saisis
+    newt.c_lflag &= ~(ECHO | ICANON);
+
+    // Appliquer les nouveaux paramètres
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+}
+
+void enableEcho() {
+    struct termios oldt;
+
+    // Restaurer les paramètres du terminal
+    tcgetattr(STDIN_FILENO, &oldt);
+
+    // Rétablir l'écho
+    oldt.c_lflag |= (ECHO | ICANON);
+
+    // Appliquer les paramètres restaurés
+    tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
+}
+
+void saisieMotDePasse(char *password) {
+    printf("Entrez votre mot de passe : ");
+    fflush(stdout); // Assurer l'affichage du message avant la saisie
+
+    disableEcho();
+
+    int i = 0;
+    char ch;
+
+    while ((ch = getchar()) != '\n' && ch != '\r' && i < MAX_PASSWORD_LENGTH - 1) {
+        if (ch == 127 || ch == 8) { // Gérer la touche "Retour arrière"
+            if (i > 0) {
+                printf("\b \b");
+                i--;
+            }
+        } else {
+            password[i++] = ch;
+            putchar('*');
+        }
+    }
+
+    password[i] = '\0';
+    enableEcho();
+    printf("\n");
+}
+
+int main() {
+    // Utilisation de la fonction connecter()
+    int connectionStatus = connecter();
+    if (connectionStatus == 1) {
+        printf("Vous êtes connecté.\n");
+    } else {
+        printf("Échec de la connexion.\n");
+    }
+
     return 0;
 }
