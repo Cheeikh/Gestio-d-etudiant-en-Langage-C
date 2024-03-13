@@ -1,4 +1,0 @@
-admin pass admin
-cheikh pass admin
-fatou pass etudiant
-fallou pass etudiant

@@ -1,2 +1,0 @@
-3 Etudiant3 Nom3
-4 Etudiant4 Nom4

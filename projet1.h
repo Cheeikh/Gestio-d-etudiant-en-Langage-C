@@ -1,3 +1,6 @@
+#ifndef projet1
+#define projet1
+
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
@@ -72,8 +75,6 @@ typedef struct
     Apprenant apprenant;
     Date datePresence;
     Heure heure;
-    int quota;
-    int cumulM;
 } Presence;
 
 typedef struct
@@ -92,12 +93,12 @@ typedef struct
 // prototype
 void chargement();
 int connexion();
-int administrateurMenu();
+extern int administrateurMenu();
 int menuEtudiant(int nbrMessagesNonLu);
-int marquerPresenceMenu();
+extern int marquerPresenceMenu();
 void Menu(char msg[]);
 void traitementAdmin(int *result, Utilisateur *u);
-extern void traitementApprenant(int *result, Utilisateur *u);
+void traitementApprenant(int *result, Utilisateur *u);
 Heure presenceHeure(int idApprenant, Presence presences[], int nbrPresence);
 int genererFichierMenu();
 int verifierPresence(int idApprenant, Presence presences[], int nbrPresence);
@@ -129,27 +130,29 @@ int login(char login[], char pass[], Utilisateur utilisateurs[], int taille, Uti
 void saisiChainePassword(char chaine[], char msg[], char msgerr[]);
 void obtenirDateAujourdhui(int *jour, int *mois, int *annee, int *h, int *mn, int *s);
 Date obtenirDateAujourdhui2();
-Heure obtenirHeure();
+extern Heure obtenirHeure();
 int testSiAnneeBissextile(int annee);
 int testSiDateValide(int annee, int mois, int jour);
 int calculNbrJourMois(int mois, int annee);
 int saisirIntDate(int min, int max, char msg[], char msgerr[]);
 int saisirDate(Date *date, char msg[], char msgerr[]);
-Message excrireMessage();
+extern Message excrireMessage();
 void getClasseName(int idRef, char chaine[]);
 int isValidMatricule(char matricule[]);
 
-int main()
-{
 
-    connexion();
 
-    return 0;
-}
+
+
+
+
+
+
+
 
 void chargement()
 {
-    printf(BLUE "\n\n                      Chargement" RESET);
+    printf(BLUE"\n\n                      Chargement"RESET);
     fflush(stdout);
     for (int i = 0; i < 3; i++)
     {
@@ -370,6 +373,7 @@ int lireFichierPresence(Presence presences[], char *fichier)
         nbrPresence++;
     }
 
+    // Fermeture du fichier
     fclose(fp);
 
     return nbrPresence;
@@ -512,11 +516,11 @@ void ajouterPresence(Presence nouvellePresence, char *fichier)
     }
 
     // Write the new presence record to the file
-    fprintf(fp, "%d,%d,%d,%d,%d,%d,%d,%d,%d\n",
+    fprintf(fp, "%d,%d,%d,%d,%d,%d,%d,%d\n",
             nouvellePresence.id, nouvellePresence.apprenant.id,
             nouvellePresence.datePresence.j, nouvellePresence.datePresence.m,
             nouvellePresence.datePresence.a, nouvellePresence.heure.h,
-            nouvellePresence.heure.mn, nouvellePresence.heure.s, nouvellePresence.cumulM);
+            nouvellePresence.heure.mn, nouvellePresence.heure.s);
 
     // Close the file
     fclose(fp);
@@ -608,7 +612,7 @@ void genererFichierPresence2(Presence presences[], int nbrPresence,
     }
 
     fprintf(fp, "+=============o=================o===============o=================o==================o=========o\n");
-    fprintf(fp, "| Matricule   | Prenom          | Nom           | Classe          | Date Naissance   | Statut  |\n");
+    fprintf(fp, "| Matricule    | Prenom         | Nom           | Classe          | Date Naissance   | Statut  |\n");
     fprintf(fp, "+=============o=================o===============o=================o==================o=========o\n");
 
     for (int i = 0; i < nbrApp; i++)
@@ -660,7 +664,7 @@ void genererFichierPresence2(Presence presences[], int nbrPresence,
     printf("\xE2\x9C\x85              Fichier %s généré avec succès.......\n", fichier);
 }
 
-void envoiMessageAtous(char Motifs[50], char texte[150], char *fichier)
+extern void envoiMessageAtous(char Motifs[50], char texte[150], char *fichier)
 {
 
     Apprenant apprenants[100];
@@ -697,7 +701,7 @@ void envoiMessageAtous(char Motifs[50], char texte[150], char *fichier)
     fclose(fp);
 }
 
-void envoiMessageParClasse(char Motifs[50], char texte[150], int idReferenciel, char *fichier)
+extern void envoiMessageParClasse(char Motifs[50], char texte[150], int idReferenciel, char *fichier)
 {
     Apprenant apprenants[100];
     int nbrApprenant = lireFichierAprennant(apprenants, "etudiants.csv");
@@ -736,7 +740,7 @@ void envoiMessageParClasse(char Motifs[50], char texte[150], int idReferenciel, 
     fclose(fp);
 }
 
-void envoiMessageParSelection(Apprenant apps[], int nbrApp, char Motifs[50], char texte[150], char *fichier)
+extern void envoiMessageParSelection(Apprenant apps[], int nbrApp, char Motifs[50], char texte[150], char *fichier)
 {
     Apprenant apprenants[100];
     int nbrApprenant = lireFichierAprennant(apprenants, "etudiants.csv");
@@ -1265,13 +1269,12 @@ int administrateurMenu()
         printf("             2 - GÉNÉRATION DE FICHIERS\n");
         printf("             3 - MARQUER LES PRÉSENCES \n");
         printf("             4 - ENVOYER UN MESSAGE \n");
-        printf("             5 - PARAMETRES \n");
-        printf("             6 - DECONNECTION \n");
+        printf("             5 - Deconnection \n");
 
         printf("\n\n             Votre choix:   ");
         scanf("%d", &choixadministrateurMenu);
 
-        if (choixadministrateurMenu < 1 || choixadministrateurMenu > 5)
+        if (choixadministrateurMenu < 1 || choixadministrateurMenu > 4)
         {
             printf("             Au revoir !!!   ");
         }
@@ -1340,35 +1343,6 @@ int genererFichierMenu()
     return choixMenuGF;
 }
 
-int parametre()
-{
-    int choixMenuGF;
-#ifdef _WIN32
-    system("cls"); // For Windows
-#else
-    system("clear"); // For Unix-like systems
-#endif
-
-    do
-    {
-        Menu("Paramétres");
-        printf("             1 - Definir le quota d'absence\n");
-        printf("             2 - À une date\n");
-        printf("             3 - Quitter \n");
-
-        printf("\n             Votre choix: ");
-        scanf("%d", &choixMenuGF);
-
-        if (choixMenuGF < 1 || choixMenuGF > 3)
-        {
-            printf("Votre choix entre 1, 2 et 3\n");
-        }
-
-    } while (choixMenuGF < 1 || choixMenuGF > 3);
-
-    return choixMenuGF;
-}
-
 int marquerPresenceMenu()
 {
     int choixMarquerPresence;
@@ -1410,7 +1384,7 @@ int referencielMenu()
 #ifdef _WIN32
     system("cls"); // For Windows
 #else
-    system("clear");
+    system("clear"); // For Unix-like systems
 #endif
 
     do
@@ -1420,6 +1394,9 @@ int referencielMenu()
         {
             printf("             %d - %s\n", i + 1, referenciels[i].libelle);
         }
+
+        // printf("2 - Ref Dig\n");
+        // printf("3 - Dev Data\n");
         printf("             4 - Quitter \n");
 
         printf("\n             Votre choix: ");
@@ -1552,6 +1529,7 @@ void traitementAdmin(int *result, Utilisateur *user)
                     genererFichierPresence(presences, nbrPresence,
                                            apprenants, nbrApprenant, utilisateurs, nbrUser,
                                            referenciels, nbrRef, choixReferenciel, d, dates, nbrDate, nomFichier);
+                    // pause();
                     sleep(2);
                     continue;
                 }
@@ -1565,6 +1543,7 @@ void traitementAdmin(int *result, Utilisateur *user)
 
                     if (d.j != 0 && d.m != 0 && d.a != 0)
                     {
+                        // Date d = obtenirDateAujourdhui2();
                         Heure h = obtenirHeure();
                         char dateHeureStr[50];
                         char nomFichier[150];
@@ -1572,7 +1551,7 @@ void traitementAdmin(int *result, Utilisateur *user)
                         sprintf(dateHeureStr, "%04d%02d%02d_%02d%02d%02d",
                                 d.a, d.m, d.j, h.h, h.mn, h.s);
 
-                        sprintf(nomFichier, "fichier_presence_%04d_%02d_%02d.csv", d.a, d.m, d.j);
+                        sprintf(nomFichier, "fichier_presence_%04d/%02d/%02d_.csv", d.a, d.m, d.j );
 
                         genererFichierPresence2(presences, nbrPresence,
                                                 apprenants, nbrApprenant, utilisateurs, nbrUser,
@@ -1584,9 +1563,16 @@ void traitementAdmin(int *result, Utilisateur *user)
                     else
                     {
                         printf("             Cette date n'est pas valide\n");
+                        // fflush(stdout);
                         while ((cl = getchar()) != '\n' && cl != EOF)
                             ;
+                        // getchar();
                     }
+
+                    // fflush(stdout);
+                    // while ((cl = getchar()) != '\n' && cl != EOF);
+                    // getchar();
+                    // pause();
                 }
 
             } while (choixMenuGF != 3);
@@ -1604,7 +1590,9 @@ void traitementAdmin(int *result, Utilisateur *user)
                 if (matricule[0] == 'q' || matricule[0] == 'Q')
                 {
                     saisiChainePassword(passwordVerify, "Mot de passe :", "\n \xE2\x9D\x8CMot de passe Obligatoire\n");
-                    if (!strcmp("pass", passwordVerify))
+                    // printf("%s", passwordVerify);
+                    // printf("%d", strcmp("12345", passwordVerify));
+                    if (!strcmp("12345", passwordVerify))
                     {
                         break;
                     }
@@ -1612,6 +1600,7 @@ void traitementAdmin(int *result, Utilisateur *user)
                     {
                         printf("\n \xE2\x9D\x8CMot de passe invalide!!\n");
                     }
+                    // while ((cl = getchar()) != '\n' && cl != EOF);
                 }
 
                 if (matricule[0] != 'q' && matricule[0] != 'Q')
@@ -1632,14 +1621,9 @@ void traitementAdmin(int *result, Utilisateur *user)
                             presence.heure.mn = mn;
                             presence.heure.s = s;
                             presence.id = presences[nbrPresence - 1].id + 1;
-                            presence.cumulM = (presence.heure.h - 8) * 60 + presence.heure.mn - 15;
-                            if (presence.cumulM < 0)
-                            {
-                                presence.cumulM = 0;
-                            }
                             ajouterPresence(presence, "presence.csv");
                             nbrPresence = lireFichierPresence(presences, "presence.csv");
-
+                            // printf("%d", nbrPresence);
                             printf("             \xE2\x9C\x85 Vous êtes maintenant présent\n");
                         }
                         else
@@ -1749,13 +1733,7 @@ void traitementAdmin(int *result, Utilisateur *user)
 
             } while (ChoiMenuSendMessage != 4);
         }
-
-        if (choixadministrateurMenu == 5)
-        {
-            /* code */
-        }
-
-    } while (choixadministrateurMenu != 6);
+    } while (choixadministrateurMenu != 5);
 #ifdef _WIN32
     system("cls"); // For Windows
 #else
@@ -1875,13 +1853,8 @@ void traitementApprenant(int *result, Utilisateur *user)
                 else
                 {
                     int lire;
-                    printf("             choisir le messages à lire(Appuyez sur 0 pour quitter):");
+                    printf("             choisir le messages à lire:");
                     scanf("%d", &lire);
-
-                    if (lire == 0)
-                    {
-                        break;
-                    }
 
                     if (lire <= 0 || lire > numeroMessages)
                     {
@@ -1951,56 +1924,4 @@ void traitementApprenant(int *result, Utilisateur *user)
 }
 
 int connexion()
-{
-#ifdef _WIN32
-    system("cls"); // For Windows
-#else
-    system("clear"); // For Unix-like systems
 #endif
-
-    char log[20];
-    char pass[20];
-    int nbUtilisateursFichier;
-    int resultConnexion = 1, resultConnexionApp = 1;
-    Utilisateur utilisateurs[100];
-    Utilisateur u;
-    char cl;
-
-    do
-    {
-
-        Menu("Menu De connexion");
-        saisiChaine(log, "             Login:", "             Veuillez saisir un login\n");
-        saisiChainePassword(pass, "             Mot de passe :", "             Veuillez saisir un Mot de passe\n");
-        // printf("%s", log);
-        // printf("%s", pass);
-        nbUtilisateursFichier = lireFichierUtilisateurs(utilisateurs, "utilisateurs.csv");
-        if (nbUtilisateursFichier == -1)
-        {
-            return 1;
-        }
-        // printf("%d", nbUtilisateursFichier);
-
-        resultConnexion = login(log, pass, utilisateurs, nbUtilisateursFichier, &u);
-        resultConnexionApp = login(log, pass, utilisateurs, nbUtilisateursFichier, &u);
-
-        // afficherUtilisateur(&u);
-        // printf("%d", u.type);
-        // printf("%d", nbUtilisateursFichier);
-        chargement();
-        if (u.type == 1)
-        {
-            traitementAdmin(&resultConnexion, &u);
-            while ((cl = getchar()) != '\n' && cl != EOF)
-                ;
-        }
-        if (u.type == 2)
-        {
-            traitementApprenant(&resultConnexionApp, &u);
-            while ((cl = getchar()) != '\n' && cl != EOF)
-                ;
-        }
-        log[0] = '\0';
-        pass[0] = '\0';
-    } while (resultConnexion == 0 || resultConnexionApp == 0);
-}
